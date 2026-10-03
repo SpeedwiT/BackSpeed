@@ -128,4 +128,4 @@ that does the same job — is in
 
 ---
 
-*Last verified against BackSpeed v1.8.5.*
+*Last verified against BackSpeed v1.0.0.*

@@ -260,4 +260,4 @@ UDP را می‌بندد ولی ICMP را نه) و *IP Spoofing* که مبدأ �
 
 ---
 
-*Last verified against BackSpeed v1.8.5.*
+*Last verified against BackSpeed v1.0.0.*

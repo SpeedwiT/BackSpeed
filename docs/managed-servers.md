@@ -294,4 +294,4 @@ as before, until it is upgraded.
 
 ---
 
-*Last verified against BackSpeed v1.8.5.*
+*Last verified against BackSpeed v1.0.0.*

@@ -2,6 +2,43 @@
 
 All notable changes to BackSpeed are documented here.
 
+## v1.0.0 — 2026-10-03
+
+The first release published from `SpeedwiT/BackSpeed`. The engine is the one
+that shipped as v1.8.5 — no tunnel, transport or wire format changed — and
+everything below is the project's own name, face and documents.
+
+### Changed
+
+- **The project is BackSpeed.** One name in every corner: the `backspeed`
+  binary, `/etc/backspeed`, `/root/BackSpeed`, the `backspeed-*` systemd units,
+  the `backspeed://` setup link, the module path `github.com/SpeedwiT/BackSpeed`,
+  and every document and help text. Moving an install made before the rename
+  means moving its configuration directory across by hand; nothing does that
+  for you.
+- **Violet instead of red.** Errors, warnings and destructive confirmations now
+  read violet — the TUI error colour, the log lines, the panel's error row, the
+  login and two-factor accents. The health-check prompt reads *Fix The Purple
+  Items*.
+- **The banner reads BACKSPEED**, and the footer links point at the SpeedwiT
+  channel, community and repository.
+
+### Removed
+
+- **Screenshots and cover art.** Both READMEs carried photographs of the panel
+  and a branded cover image; they are gone, and the architecture diagram is the
+  only illustration left. What a panel looks like is described in
+  `docs/web-panel-screens.md`.
+- **The upstream attribution line from the READMEs.** It stays where the
+  licence document puts it — `NOTICE` — and is quoted in `TRADEMARK.md`.
+  Nothing in the program shows it.
+
+### Documentation
+
+- Every *last verified against* footer now reads v1.0.0.
+- The tagging example in `docs/releasing.md` reads the version out of `VERSION`
+  instead of naming one.
+
 ## v1.8.5 — 2026-09-30
 
 ### Added

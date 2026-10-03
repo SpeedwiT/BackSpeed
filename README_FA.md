@@ -1,24 +1,25 @@
 <div dir="rtl">
 
-<p align="center"><img src="img/cover.png" alt="BackSpeed" width="100%"></p>
-
-# بک‌اسپید 🎒
+# بک‌اسپید
 
 <p align="center">
-  <a href="go.mod"><img alt="Go version" src="https://img.shields.io/github/go-mod/go-version/SpeedwiT/BackSpeed?logo=go&label=Go"></a>
-  <a href="https://github.com/SpeedwiT/BackSpeed/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/SpeedwiT/BackSpeed?logo=github&label=release&color=blue"></a>
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/SpeedwiT/BackSpeed?color=green"></a>
-  <a href="https://github.com/SpeedwiT/BackSpeed/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/SpeedwiT/BackSpeed?style=flat&logo=github&color=yellow"></a>
-  <a href="https://github.com/SpeedwiT/BackSpeed/releases"><img alt="Total downloads across all releases" src="https://img.shields.io/github/downloads/SpeedwiT/BackSpeed/total?logo=github&label=total%20downloads&color=orange"></a>
+  <b>یک باینری Go که سرویست را از ایران قابل‌دسترس نگه می‌دارد — با هر چیزی که مسیر امروز واقعاً تحمل می‌کند.</b>
 </p>
 
-**بک‌اسپید** یک هستهٔ تونل با کارایی بالاست که کاملاً با **Go** نوشته شده و برای
-ست‌آپ سرور ایران ⇄ خارج طراحی شده. یک باینری واحد است با یک منوی تعاملی CLI
-**و** یک پنل وب امن — یعنی همه‌چیز را با ترمینال یا بدون ترمینال می‌توانی
-مدیریت کنی.
+<p align="center">
+  <a href="go.mod"><img alt="Go version" src="https://img.shields.io/github/go-mod/go-version/SpeedwiT/BackSpeed?logo=go&label=Go&color=8b5cf6"></a>
+  <a href="https://github.com/SpeedwiT/BackSpeed/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/SpeedwiT/BackSpeed?logo=github&label=release&color=8b5cf6"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/SpeedwiT/BackSpeed?color=8b5cf6"></a>
+  <a href="https://github.com/SpeedwiT/BackSpeed/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/SpeedwiT/BackSpeed?style=flat&logo=github&color=8b5cf6"></a>
+  <a href="https://github.com/SpeedwiT/BackSpeed/releases"><img alt="Total downloads across all releases" src="https://img.shields.io/github/downloads/SpeedwiT/BackSpeed/total?logo=github&label=total%20downloads&color=8b5cf6"></a>
+</p>
 
-تونل را به دو شکل می‌برد: **معکوس** (خارج به ایران وصل می‌شود) و **مستقیم**
-(ایران به خارج وصل می‌شود و یک تونل کامل IP می‌سازد).
+**چرا این ساخته شده؟** مسیر ایران به خارج یک چیز ثابت نیست.在整个 روز عوض می‌شود،
+بی‌خبر ضعیف می‌شود و پروتکلی که هفتهٔ پیش جواب می‌داد لزوماً همانی نیست که امروز
+جواب بدهد. بیشتر ابزارهای تونل یک ترنسپورت می‌دهند و از تو امیدواری می‌خواهند.
+بک‌اسپید **دوازده تا** می‌دهد، به‌علاوهٔ توانایی **اول مسیر را اندازه گرفتن** و
+انتخاب کردن — و بعد مراقبت کردن، فِیل‌اوور کردن، و عوض کردن وقتی آن انتخاب دیگر
+جواب نداد.
 
 </div>
 
@@ -26,7 +27,8 @@
   <b><a href="tutorial/README.md">📘 آموزش‌های راه‌اندازی</a></b> ·
   <b><a href="docs/README.md">📚 مستندات</a></b> ·
   <b><a href="README.md">🇬🇧 English</a></b> ·
-  <b><a href="https://t.me/Speedw_IT">✈️ تلگرام</a></b>
+  <b><a href="https://t.me/Speedw_IT">✈️ تلگرام</a></b> ·
+  <b><a href="https://t.me/SpeedwIT">👥 جامعه</a></b>
 </p>
 
 <div dir="rtl">
@@ -35,19 +37,40 @@
 
 ---
 
+## چه چیزی دستت می‌آید
+
+- **منوی تعاملی CLI** — ویزارد دوطرفه؛ یک لینک راه‌اندازی، سمت خارج را به یک
+  پیست کردن تبدیل می‌کند.
+- **دوازده ترنسپورت معکوس** — TCP، TCP Mux، TCP + Stealth، TCP + PCK، UDP،
+  UDP + KCP + FEC، UDP + QUIC، WS، WS Mux، WSS، WSS Mux و xDi (ICMP).
+- **تونل مستقیم لایهٔ ۳** — یک اینترفیس نقطه‌به‌نقطهٔ خصوصی که پکت کامل IP حمل
+  می‌کند، برای وقتی که اصلاً اتصال ورودی به ایران وجود ندارد.
+- **Link Test** — تأخیر، جیتر و افت پکت را روی مسیر واقعی می‌سنجد و ترنسپورت
+  مناسبش را پیشنهاد می‌دهد.
+- **فِیل‌اوور و fallback** — چند آدرس برای هر تونل، و زنجیره‌ای از ترنسپورت‌ها
+  که وقتی یکی ترافیک را رد نکرد پایین می‌رود.
+- **Health Check و واچ‌داگ** — تونل از کارافتاده را پیدا می‌کند، راه‌حلش را
+  می‌نویسد، و مرده‌ها را دوباره بالا می‌آورد.
+- **پنل وب مانیتورینگ** — CPU، RAM، دیسک، ترافیک، وضعیت و لاگ روی پورت ۷۷۷۷،
+  با ورود دوم و توکن‌های API محدودشده.
+- **سرورهای مدیریت‌شده** — ماشین‌های راه دور را با SSH ثبت کن و هر دو طرف تونل
+  را از پنل بساز، بدون تکرار دستی راه‌اندازی.
+- **مانیتورینگ تلگرام** — گزارش دوره‌ای، هشدار و پیام بازیابی، که در محیطی که
+  دسترسی مستقیم به تلگرام نیست از خودِ تونل عبور می‌کند.
+- **بکاپ، بازگشت خودکار، آپدیت تأییدشده** — نقطهٔ بازیابی قبل از هر تغییر،
+  آرشیو با چک‌سام SHA-256، و نصب آفلاین وقتی گیت‌هاب بسته است.
+
+---
+
 ## چطور کار می‌کند
 
 <p align="center"><img src="img/architecture.svg" alt="معماری بک‌اسپید: کاربر به پورت forward‌شده روی سرور ایران وصل می‌شود، انجین آن را از یک ترنسپورت به کلاینت خارج می‌برد و کلاینت به سرویس واقعی می‌رساند. کلاینت به سرور dial می‌کند." width="100%"></p>
-
-</div>
 
 ```
   کاربر ──▶  سرور ایران  ══ تونل ══▶  سرور خارج  ──▶  سرویس واقعی
              «Setup Iran»              «Setup Kharej»    (X-UI، پنل،
              پورت‌ها را باز می‌کند       به ایران وصل می‌شود   وایرگارد…)
 ```
-
-<div dir="rtl">
 
 کاربر به یک **پورت forward‌شده** روی سرور ایران وصل می‌شود؛ انجین آن را از طریق
 **یک ترنسپورت** به کلاینت خارج می‌برد و کلاینت آن را به **سرویس واقعی** می‌رساند.
@@ -120,21 +143,16 @@ replay، و **MTU خودش را اندازه می‌گیرد**. تنها چیز�
 | **xdi** | ICMP echo، برای مسیری که UDP و TCP را می‌بندد ولی پینگ را نه. | لینوکس، root، ICMP باز | [→](docs/l3-direct-tunnel.md) |
 | **spoof** | IP خام با **آدرس مبدأ جعلی**، برای مسیری که بر اساس مبدأ محدود یا مسدود می‌کند. | لینوکس، root، مسیری که مبدأ جعلی را رد کند | [→](docs/ip-spoofing.md) |
 
-هر شش‌تا یک‌جور ساخته می‌شوند — `sudo backspeed` → **Setup Iran** یا
-**Setup Kharej** → **Direct** → حامل را انتخاب کن — و یک صفحه همه‌شان را پوشش
-می‌دهد.
-
 **اول سرور ایران را بساز.** بعد از ساخت تونل، ایران یک **لینک `backspeed://`** چاپ
-می‌کند، و زیرش یک **دستور یک‌خطی** که روی خارجی که هنوز بک‌اسپید ندارد (با کاربر root) بک‌اسپید را نصب
-می‌کند و تونل را از همان لینک می‌سازد و بالا می‌آورد — بدون هیچ سؤالی. اگر خارج بک‌اسپید را دارد،
-**Setup Kharej ← Direct ← همان حامل ← Setup Link** را بزن و لینک را پیست کن (یا
-`backspeed link apply '<link>'`) — توکن، آدرس‌ها و تنظیمات خودکار می‌آیند. برای چند خارج پشت یک ایران، برای هر خارج یک بار از ایران تونل بساز؛ هر
-کدام لینک خودش را دارد.
+می‌کند، و زیرش یک **دستور یک‌خطی** که روی خارجی که هنوز بک‌اسپید ندارد (با کاربر
+root) نصبش می‌کند و تونل را از همان لینک می‌سازد — بدون هیچ سؤالی. اگر خارج
+بک‌اسپید را دارد، **Setup Kharej ← Direct ← همان حامل ← Setup Link** را بزن و
+لینک را پیست کن (یا `backspeed link apply '<link>'`). برای چند خارج پشت یک ایران،
+برای هر خارج یک بار از ایران تونل بساز؛ هر کدام لینک خودش را دارد.
 
 **[← تونل مستقیم به‌طور کامل](docs/l3-direct-tunnel.md)** ·
-**[← IP Spoofing، تنظیم به تنظیم](docs/ip-spoofing.md)** · [صفحهٔ راه‌اندازی‌اش](tutorial/ip-spoofing.md) ·
-**[← توضیح TCP + PCK](docs/tcp-pck.md)** ·
-**[← تونل مستقیم لایه‌۴ قدیمی](docs/direct-tunnel.md)** · [صفحهٔ راه‌اندازی‌اش](tutorial/direct-tunnel.md)
+**[← IP Spoofing](docs/ip-spoofing.md)** ·
+**[← تونل مستقیم لایه‌۴ قدیمی](docs/direct-tunnel.md)**
 
 ---
 
@@ -153,7 +171,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/SpeedwiT/BackSpeed/main/inst
 
 دفعات بعد هر وقت خواستی با `sudo backspeed` بازش کن.
 
-> **سرور به اینترنت دسترسی ندارد؟** یک مسیر نصب آفلاین کامل وجود دارد — فقط یک
+> **سرور به گیت‌هاب دسترسی ندارد؟** یک مسیر نصب آفلاین کامل وجود دارد — فقط یک
 > آرشیو را کپی کن. build از سورس هم به‌عنوان راه دوم کار می‌کند.
 > **← [راهنمای کامل نصب](docs/install.md)**
 
@@ -293,23 +311,13 @@ TLS و زمان‌بندی؛ آپدیت تأییدشده روی کانال stabl
 
 ---
 
-## اسکرین‌شات‌ها
-
-| منوی CLI | پنل وب |
-|----------|--------|
-| ![منوی CLI](img/cli-Screenshot.png) | ![پنل وب](img/web-panel-Screenshot.png) |
-
-| مدیریت تونل‌ها | ربات تلگرام |
-|----------------|-------------|
-| ![مدیریت تونل‌ها](img/cli-manage-Screenshot.png) | ![ربات تلگرام](img/tg-bot-Screenshot.png) |
-
----
-
 ## حمایت و دونیت
 
 اگر بک‌اسپید برات مفید بود، یه ستاره یا یه دونیت کوچیک خیلی ارزشمنده. 🙏
 
 - کانال تلگرام: **[@Speedw_IT](https://t.me/Speedw_IT)**
+- جامعه: **[@SpeedwIT](https://t.me/SpeedwIT)**
+- مشکلات را در [Issues](https://github.com/SpeedwiT/BackSpeed/issues) بگو
 
 </div>
 
@@ -323,22 +331,14 @@ TLS و زمان‌بندی؛ آپدیت تأییدشده روی کانال stabl
 
 ## لایسنس
 
-**کپی‌رایت © ۲۰۲۶ امین محمدی (AminMGMT).**
-تحت **GNU Affero General Public License v3.0 (AGPL-3.0)** منتشر شده — فایل
-[LICENSE](LICENSE) و [NOTICE](NOTICE).
+بک‌اسپید نرم‌افزار آزاد است و تحت **GNU Affero General Public License v3.0
+(AGPL-3.0)** منتشر می‌شود.
+
+- [LICENSE](LICENSE) — متن کامل مجوز
+- [NOTICE](NOTICE) — شرط‌های اضافه و اعلان‌های لازم
+- [TRADEMARK.md](TRADEMARK.md) — شرط‌های نام و برند
 
 می‌توانی از آن استفاده کنی، بخوانی‌اش، تغییرش بدهی، بازتوزیعش کنی و رویش
-کسب‌وکار بسازی. دو شرط همراهش می‌آید که هر دو را بخش ۷ همان مجوز صریحاً اجازه
-می‌دهد و هیچ‌کدام چیزی از آزادی‌هایی که می‌دهد کم نمی‌کند:
-
-- **انتساب را نگه دار.** یک نسخهٔ تغییریافته باید این خط را بدون تغییر در README
-  خودش (و در NOTICE) داشته باشد:
-
-  > Based on BackPack by Amin Mohammadi (AminMGMT)
-  > https://github.com/AminMGMT/BackPack
-
-- **از نام خودت استفاده کن.** «BackPack»، نام و لوگو همراه کد لایسنس نشده‌اند —
-  یک fork به نام خودش نیاز دارد. گفتن این حقیقت که کارت بر پایهٔ BackPack است یا
-  با آن سازگار است همیشه آزاد است. [TRADEMARK.md](TRADEMARK.md) را ببین.
+کسب‌وکار بسازی، مشروط به رعایت همین موارد.
 
 </div>

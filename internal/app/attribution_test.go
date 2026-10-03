@@ -12,8 +12,9 @@ import (
 // AGPL-3.0 lets anybody fork this and publish the fork. Section 7(b) of the
 // same licence lets the author require that the attribution be preserved when
 // they do, and NOTICE exercises that: a modified version keeps the line in its
-// NOTICE and its README. The program itself — the TUI menu, the web panel, the
-// version output — does not show it.
+// NOTICE, and TRADEMARK.md quotes it as the wording that accompanies the name.
+// The READMEs are the fork's own description and may omit it; the program
+// itself — the TUI menu, the web panel, the version output — never shows it.
 const attribution = "Based on BackPack by Amin Mohammadi (AminMGMT)"
 
 // repoRoot is two levels up from internal/app.
@@ -35,9 +36,11 @@ func read(t *testing.T, rel string) string {
 	return string(b)
 }
 
-// NOTICE states the requirement and the READMEs tell a fork where the line goes.
+// NOTICE states the requirement and TRADEMARK.md quotes the exact wording, so a
+// fork reading either one has it. The READMEs describe the fork itself and are
+// deliberately not required to carry it.
 func TestTheAttributionIsInTheLicenceDocuments(t *testing.T) {
-	for _, f := range []string{"NOTICE", "README.md", "README_FA.md", "TRADEMARK.md"} {
+	for _, f := range []string{"NOTICE", "TRADEMARK.md"} {
 		if !strings.Contains(read(t, f), attribution) {
 			t.Errorf("%s does not carry the attribution %q", f, attribution)
 		}
@@ -55,7 +58,7 @@ func TestTheProductDoesNotShowTheAttribution(t *testing.T) {
 		"internal/webui/panel/views/support.html",
 	} {
 		if strings.Contains(read(t, f), "Based on BackPack") {
-			t.Errorf("%s shows the attribution line; it belongs in NOTICE and the README only", f)
+			t.Errorf("%s shows the attribution line; it belongs in NOTICE and TRADEMARK.md only", f)
 		}
 	}
 }

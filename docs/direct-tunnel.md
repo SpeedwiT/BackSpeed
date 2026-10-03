@@ -256,4 +256,4 @@ nonce و یک پروتکل سیگنال بین دو سر نیاز دارد. **ه
 
 ---
 
-*Last verified against BackSpeed v1.8.5.*
+*Last verified against BackSpeed v1.0.0.*

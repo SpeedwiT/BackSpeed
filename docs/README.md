@@ -89,4 +89,4 @@ Reference pages: what each part of BackSpeed **is**, and every setting it has.
 
 ---
 
-*Last verified against BackSpeed v1.8.5.*
+*Last verified against BackSpeed v1.0.0.*

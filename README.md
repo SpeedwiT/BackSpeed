@@ -1,28 +1,24 @@
-<p align="center">
-  <img src="img/image.png" alt="BackSpeed" width="100%">
-</p>
-
 <h1 align="center">BackSpeed</h1>
 
 <p align="center">
-  <b>High-performance tunneling between Iran and abroad — built in Go.</b>
+  <b>One Go binary that keeps a service reachable from Iran — through whatever<br>the route will actually carry today.</b>
 </p>
 
 <p align="center">
   <a href="https://github.com/SpeedwiT/BackSpeed/releases/latest">
-    <img src="https://img.shields.io/github/v/release/SpeedwiT/BackSpeed?logo=github&label=release&color=orange" alt="Latest release">
+    <img src="https://img.shields.io/github/v/release/SpeedwiT/BackSpeed?logo=github&label=release&color=8b5cf6" alt="Latest release">
   </a>
   <a href="go.mod">
-    <img src="https://img.shields.io/github/go-mod/go-version/SpeedwiT/BackSpeed?logo=go&label=Go" alt="Go version">
+    <img src="https://img.shields.io/github/go-mod/go-version/SpeedwiT/BackSpeed?logo=go&label=Go&color=8b5cf6" alt="Go version">
   </a>
   <a href="LICENSE">
-    <img src="https://img.shields.io/github/license/SpeedwiT/BackSpeed?color=orange" alt="License">
+    <img src="https://img.shields.io/github/license/SpeedwiT/BackSpeed?color=8b5cf6" alt="License">
   </a>
   <a href="https://github.com/SpeedwiT/BackSpeed/stargazers">
-    <img src="https://img.shields.io/github/stars/SpeedwiT/BackSpeed?style=flat&logo=github&color=orange" alt="GitHub stars">
+    <img src="https://img.shields.io/github/stars/SpeedwiT/BackSpeed?style=flat&logo=github&color=8b5cf6" alt="GitHub stars">
   </a>
   <a href="https://github.com/SpeedwiT/BackSpeed/releases">
-    <img src="https://img.shields.io/github/downloads/SpeedwiT/BackSpeed/total?logo=github&label=downloads&color=orange" alt="Downloads">
+    <img src="https://img.shields.io/github/downloads/SpeedwiT/BackSpeed/total?logo=github&label=downloads&color=8b5cf6" alt="Downloads">
   </a>
 </p>
 
@@ -36,33 +32,50 @@
 
 ---
 
-## What is BackSpeed?
+## Why this exists
 
-**BackSpeed** is a high-performance tunnel engine for connecting **Iran ⇄ abroad (kharej)** servers.
+A route from Iran to abroad is not a stable thing. It changes during the day, it
+degrades without warning, and the protocol that worked last week is not always
+the protocol that works now.
 
-It is written in Go and distributed as a self-contained binary with:
+Most tunnel tools give you one transport and ask you to hope. BackSpeed gives
+you **twelve**, plus the ability to **measure the route first** and pick one —
+and then to keep checking, fail over, and switch when the choice stops working.
 
-* Interactive CLI
-* Web monitoring panel
-* Multiple tunnel transports
-* Full IP direct tunneling
-* Automatic failover and transport fallback
-* Health checks and route diagnostics
-* Backup, rollback and verified updates
-* Telegram monitoring
-* Multi-server management
-
-BackSpeed is designed for routes where connectivity is not something you can simply assume will stay healthy.
-
-Instead of depending on one protocol or one path, it gives you several transport and recovery strategies and lets you measure the route before choosing one.
+The result is a tunnel that you configure once and then largely stop thinking
+about.
 
 ---
 
-# How it works
+## What you get
 
-## Reverse tunnel
+* **Interactive CLI** — a menu-driven wizard on both ends; a setup link makes
+  the kharej side a single paste.
+* **Twelve reverse transports** — TCP, TCP Mux, TCP + Stealth, TCP + PCK, UDP,
+  UDP + KCP + FEC, UDP + QUIC, WS, WS Mux, WSS, WSS Mux and xDi (ICMP).
+* **Layer-3 direct tunnel** — a private point-to-point interface carrying real
+  IP packets, for when inbound access to Iran is not available at all.
+* **Link Test** — measures latency, jitter and packet loss over the real path
+  and recommends a transport for it.
+* **Failover and fallback** — several addresses per tunnel, and a chain of
+  transports to fall through when one stops getting traffic.
+* **Health check and watchdog** — detects a stalled tunnel, applies a suggested
+  fix, restarts what is dead.
+* **Web monitoring panel** — CPU, RAM, disk, traffic, tunnel state and logs on
+  port 7777, with two-factor auth and scoped API tokens.
+* **Managed servers** — register remote machines over SSH and build both ends
+  of a tunnel from the panel without repeating the setup by hand.
+* **Telegram monitoring** — status reports, alerts and recovery messages, relayed
+  through the tunnel when Telegram itself is unreachable.
+* **Backup, rollback, verified updates** — restore points before every change,
+  SHA-256 verified release archives, offline install when GitHub is blocked.
 
-The normal BackSpeed tunnel is a **reverse tunnel**:
+---
+
+## How it works
+
+The usual deployment is a **reverse tunnel**: the kharej machine dials out to
+the Iran machine, and users reach the service through the Iran side.
 
 ```text
                     INTERNET
@@ -71,165 +84,84 @@ The normal BackSpeed tunnel is a **reverse tunnel**:
                        ▼
                 ┌──────────────┐
                 │ IRAN SERVER  │
-                │              │
                 │ Exposed port │
                 └──────┬───────┘
-                       │
-                       │ BackSpeed tunnel
-                       │
+                       │  BackSpeed tunnel
                        ▼
                 ┌──────────────┐
                 │ KHAREJ SERVER│
-                │              │
                 │ Real service │
                 └──────────────┘
 ```
-
-The direction is important:
 
 ```text
 KHAREJ ───────────────▶ IRAN
           tunnel
 ```
 
-The **kharej server dials the Iran server**, while user traffic enters through the Iran server and is forwarded to the service on kharej.
-
 | Server     | Setup          | Role                                                |
 | ---------- | -------------- | --------------------------------------------------- |
 | **Iran**   | `Setup Iran`   | Listens for the tunnel and exposes forwarded ports  |
 | **Kharej** | `Setup Kharej` | Dials Iran and forwards traffic to the real service |
 
-This means:
+Because the kharej side dials out, it needs **no inbound tunnel port**. Configure
+the Iran side first; it hands you a one-line setup link that carries the
+address, port and token over to the kharej side.
 
-* The kharej server does **not** need an inbound tunnel port.
-* The Iran server needs the tunnel port open.
-* The Iran side should be configured first.
-* The kharej side needs the Iran address, tunnel port and token generated by the Iran side.
+<p align="center">
+  <img src="img/architecture.svg" alt="How BackSpeed moves traffic: end users in Iran reach the Iran server, which carries the connection through an encrypted tunnel to the BackSpeed engine on the kharej machine, which forwards to the real service." width="100%">
+</p>
 
-> The **tunnel port** and the **forwarded ports** are different things.
-> The tunnel port carries BackSpeed itself; forwarded ports are the ports your users connect to.
-
-For the complete explanation, see [Before you start](tutorial/before-you-start.md).
-
----
-
-# Direct tunnel
-
-BackSpeed also supports a **direct tunnel**, where Iran initiates the connection to kharej.
+There is also a **direct tunnel**, where Iran initiates the connection instead:
 
 ```text
 IRAN ─────────────────────────▶ KHAREJ
              tunnel
 ```
 
-The current `Setup → Direct` wizard builds BackSpeed's **full layer-3 tunnel**.
-
-Instead of forwarding individual connections, it creates a private point-to-point network interface between the two machines and carries complete IP packets through it.
+The `Setup → Direct` wizard builds a full layer-3 tunnel — GRE encapsulation,
+Noise encryption, automatic MTU handling and full IP routing over a private
+point-to-point interface:
 
 ```text
 ┌──────────────┐                  ┌──────────────┐
 │ IRAN         │                  │ KHAREJ       │
-│              │                  │              │
 │ 10.10.0.1    │══════════════════│ 10.10.0.2    │
-│              │    BackSpeed      │              │
 └──────────────┘                  └──────────────┘
 ```
 
-The direct tunnel uses:
-
-* GRE encapsulation
-* Noise encryption
-* Automatic MTU handling
-* Multiple carrier options
-* Full IP routing
-
-Set up the Iran server first: `Setup Iran → Direct → carrier`. Its summary, right before **Create This Tunnel**, shows a one-line **setup link** (`backspeed://…`) and, under it, one command that installs BackSpeed on a fresh kharej and builds the tunnel from that link; on a kharej that already runs BackSpeed choose `Setup Kharej → Direct → the same carrier → Setup Link`, or run `backspeed link apply '<link>'`. The token, addresses and tuning come across in the link. For several kharej servers behind one Iran server, repeat it once per kharej — each gets its own link.
-
 See [Direct layer-3 tunnel](docs/l3-direct-tunnel.md).
 
-> The older stream-based `[direct]` engine still exists for existing configurations, but the current wizard builds the layer-3 direct tunnel.
+---
+
+## Before you start
+
+Four things cause most first-time problems.
+
+**1. The roles.** Users → Iran → Kharej → real service. Iran listens, kharej
+dials. Getting these backwards is the single most common mistake.
+
+**2. The token.** The Iran side generates a random 64-character token and both
+ends must use exactly the same one. A mismatch looks like a dead tunnel —
+especially on encrypted transports, where the server may deliberately not
+answer.
+
+**3. Port mappings.** `443` means Iran `:443` → kharej `127.0.0.1:443`.
+`443=127.0.0.1:2096` means Iran `:443` → kharej `127.0.0.1:2096`. Explicit
+backends, several backends and port ranges all work. See
+[Port mappings](docs/port-mappings.md).
+
+**4. UDP.** Forwarded ports carry **TCP by default**. If the service behind the
+tunnel needs UDP — Xray / 3x-ui, Shadowsocks, WireGuard, DNS, games — turn it on
+per tunnel. See [Forwarded UDP](docs/forwarded-udp.md).
+
+The full walkthrough is [Before you start](tutorial/before-you-start.md).
 
 ---
 
-# Before you start
+## Quick start
 
-There are four things responsible for most first-time setup problems:
-
-### 1. The roles
-
-```text
-Users
-  │
-  ▼
-Iran ────────────────▶ Kharej
-       BackSpeed          │
-                        ▼
-                    Real service
-```
-
-### 2. The token
-
-The Iran side generates a random **64-character token**.
-
-Both ends must use the same token.
-
-A mismatch can look like a dead tunnel, especially on encrypted transports where the server may intentionally not respond.
-
-### 3. Port mappings
-
-For example:
-
-```text
-443
-```
-
-means:
-
-```text
-Iran :443
-   ↓
-Kharej 127.0.0.1:443
-```
-
-while:
-
-```text
-443=127.0.0.1:2096
-```
-
-means:
-
-```text
-Iran :443
-   ↓
-Kharej 127.0.0.1:2096
-```
-
-You can also use explicit backend addresses, multiple backends and port ranges.
-
-See [Port mappings](docs/port-mappings.md).
-
-### 4. UDP
-
-Forwarded ports carry **TCP by default**.
-
-UDP forwarding is a separate per-tunnel setting.
-
-Enable it when the service behind the tunnel requires UDP, such as:
-
-* Xray / 3x-ui
-* Shadowsocks UDP
-* WireGuard
-* DNS
-* Games
-
-See [Forwarded UDP](docs/forwarded-udp.md).
-
----
-
-# Quick Start
-
-## 1. Install
+### 1. Install
 
 On both servers:
 
@@ -243,97 +175,56 @@ Then:
 sudo backspeed
 ```
 
-The installer downloads the release for the server architecture, verifies its published checksum, installs it and opens the CLI.
-
-Supported release architectures currently include:
+The installer downloads the release for your architecture, verifies its published
+SHA-256 checksum, installs it and opens the CLI. It refuses to install anything
+that does not verify.
 
 ```text
 x86_64  → amd64
 aarch64 → arm64
+armv7   → armv7
 ```
 
-If the server cannot reach GitHub, BackSpeed also supports a completely offline installation.
+If the server cannot reach GitHub at all, use the
+[offline installation](#offline-installation). See
+[Installation](docs/install.md).
 
-See [Installation](docs/install.md).
-
----
-
-## 2. Configure the Iran server
-
-```bash
-sudo backspeed
-```
-
-Then:
+### 2. Configure the Iran server
 
 ```text
-1. Setup Iran
-→ Reverse
-→ Transport
-→ Iran IP Or Domain (the detected one is the default)
-→ Tunnel Port
-→ Forwarded Ports
-→ Tunnel Name
-→ Security Token (generated — press Enter)
-→ Carry UDP As Well As TCP
-→ the transport's own questions (certificate for WSS, flags for PCK, …)
-→ How Should The Tunnel Be Tuned?
+sudo backspeed
+1. Setup Iran → Reverse → transport → Iran IP/domain → tunnel port
+→ forwarded ports → name → token (Enter) → UDP → transport's own questions
+→ tuning → Create This Tunnel
 ```
 
-The summary before **Create This Tunnel** shows a one-line **Setup Link** (`backspeed://…`). Copy it.
-
+The summary shows a one-line **setup link** (`backspeed://…`). Copy it.
 For a first deployment, **TCP** is the simplest starting point.
 
----
+### 3. Configure the kharej server
 
-## 3. Configure the kharej server
-
-```bash
+```text
 sudo backspeed
+2. Setup Kharej → Reverse → same transport
+→ Setup Link → paste the link → name → Create This Tunnel
 ```
 
-Then:
+`Manual` is there too, if you would rather type the Iran address, tunnel port and
+token yourself.
+
+### 4. Check it
 
 ```text
-2. Setup Kharej
-→ Reverse
-→ Same transport
-→ Setup Link → paste the link → Tunnel Name → Create This Tunnel
+Manage → Status        the tunnel's own report
+Manage → Health Check  server, panel and tunnels, with a fix for what it finds
+Manage → Link Test     latency, jitter and loss, plus a transport recommendation
 ```
-
-**Manual** is there too: Iran IP, the same tunnel port, a name, the same token, the same preset.
-
----
-
-## 4. Check the tunnel
-
-Use:
-
-```text
-Manage → Status
-```
-
-Then:
-
-```text
-Manage → Health Check
-```
-
-If you are unsure which transport to use:
-
-```text
-Manage → Link Test
-```
-
-Link Test measures the route over TCP, including latency, jitter and packet loss, and recommends a suitable transport.
 
 See [Choosing a transport](docs/choosing-a-transport.md).
 
 ---
 
-# Which transport should I use?
-
-If you don't know where to start, use this:
+## Which transport should I use?
 
 | Situation                                         | Start with          |
 | ------------------------------------------------- | ------------------- |
@@ -349,25 +240,8 @@ If you don't know where to start, use this:
 | TCP and UDP are filtered but ICMP works           | **xDi (ICMP)**      |
 | Inbound access to Iran is unavailable             | **Direct tunnel**   |
 
-The easiest way to choose is:
-
-```text
-Kharej
-  ↓
-Manage → Link Test
-  ↓
-Measure route
-  ↓
-Get recommendation
-```
-
-See [Choosing a transport](docs/choosing-a-transport.md) and [all transports](docs/transports.md).
-
----
-
-# Transport overview
-
-BackSpeed currently provides **twelve reverse-tunnel transports**.
+When unsure, run `Manage → Link Test` on the kharej side and let it measure the
+route and recommend one.
 
 | Transport           | Family       |   Encryption  | PROXY v2 | Requirements        |
 | ------------------- | ------------ | :-----------: | :------: | ------------------- |
@@ -384,273 +258,91 @@ BackSpeed currently provides **twelve reverse-tunnel transports**.
 | WSS Mux             | WebSocket    |      TLS      |     ✓    | Certificate         |
 | **xDi (ICMP)**      | Experimental | Token-derived |     ✓    | Linux + root + ICMP |
 
-### TCP
+Notes on the four that are usually the answer:
 
-Plain reliable TCP.
+* **TCP + Stealth** wraps TCP in a Noise record layer — no TLS ClientHello, no
+  recognizable protocol header. For when plain TCP is being identified and cut.
+* **TCP + PCK** builds TCP segments outside the kernel's connection state. For
+  when TCP connects and then stalls, resets or gets throttled. Linux + root on
+  both ends.
+* **UDP + KCP + FEC** is reliable and ordered over UDP with forward error
+  correction — for lossy routes where TCP backs off too aggressively.
+* **xDi** carries KCP inside ICMP echo packets, for the case where TCP and UDP
+  are both filtered but ICMP still gets through. A last resort, not a starting
+  point.
 
-Low overhead and the simplest starting point on a clean route.
-
-### TCP Mux
-
-Multiplexes multiple logical connections over a small pool of TCP connections.
-
-Useful for services that create many short-lived connections.
-
-### TCP + Stealth
-
-TCP wrapped in a Noise record layer.
-
-The handshake and encrypted stream do not use a TLS ClientHello or a recognizable application protocol header.
-
-Useful when plain TCP is being identified, filtered or killed.
-
-### TCP + PCK
-
-Builds TCP segments without using the kernel's normal TCP connection state.
-
-Useful when normal TCP connects but later stalls, resets or gets throttled.
-
-Requires Linux and root on both ends.
-
-### UDP
-
-Raw UDP transport with minimal overhead.
-
-There is no reliability or ordering layer.
-
-### UDP + KCP + FEC
-
-Reliable, ordered transport over UDP with forward error correction.
-
-Designed for routes where packet loss makes TCP back off too aggressively, and for latency-sensitive traffic.
-
-### UDP + QUIC
-
-QUIC over UDP with TLS 1.3, multiplexing, congestion control and loss recovery.
-
-It is available for testing, but BackSpeed's route testing does not generally recommend it over KCP for lossy Iran routes.
-
-### WS / WS Mux
-
-WebSocket transport for routes where HTTP traffic is useful or where the tunnel needs to sit behind a CDN.
-
-WS Mux adds multiplexing and PROXY protocol support.
-
-### WSS / WSS Mux
-
-WebSocket over TLS.
-
-WSS can use a real certificate and Chrome-style TLS behavior and can provide a decoy site for probes.
-
-### xDi
-
-Carries the KCP transport inside ICMP echo packets instead of UDP.
-
-Designed for the specific case where TCP and UDP are filtered but ICMP remains available.
-
-It is a last-resort transport rather than the normal starting point.
-
-See the complete [Transport reference](docs/transports.md).
+Full reference: [Transports](docs/transports.md) ·
+[Choosing a transport](docs/choosing-a-transport.md).
 
 ---
 
-# Forwarded UDP
+## Reliability
 
-UDP forwarding is independent of the transport carrying the tunnel.
+**Backup addresses.** A tunnel can carry several server addresses. BackSpeed
+health-scores them, fails over between them and load-balances across the healthy
+ones. See [Failover & load balancing](docs/failover-load-balancing.md).
 
-For example:
-
-```text
-Iran :443/tcp + :443/udp
-        │
-        ▼
-BackSpeed
-        │
-        ▼
-Kharej :443/tcp + :443/udp
-```
-
-This is useful for:
-
-* Xray / 3x-ui
-* WireGuard
-* DNS
-* Games
-* Other services that require UDP
-
-UDP forwarding is **off by default**.
-
-See [Adding UDP to a tunnel](tutorial/udp-forwarding.md).
-
----
-
-# Reliability
-
-BackSpeed is built around routes that can change or fail.
-
-## Backup addresses
-
-A tunnel can have multiple server addresses.
-
-BackSpeed can:
-
-* automatically fail over between addresses
-* health-score available addresses
-* load-balance across healthy addresses
-
-See [Failover & load balancing](docs/failover-load-balancing.md).
-
-## Transport fallback
-
-A tunnel can also have a fallback chain.
-
-For example:
+**Transport fallback.** A tunnel can also carry a chain:
 
 ```toml
 transport = "wss"
 
-fallback_transports = [
-  "quic",
-  "kcp",
-  "tcpmux"
-]
+fallback_transports = ["quic", "kcp", "tcpmux"]
 ```
 
-If the active carrier stops getting through, BackSpeed can move through the configured fallback chain.
+When the active carrier stops getting through, it moves down the chain. See
+[Transport fallback](docs/transport-fallback.md).
 
-See [Transport fallback](docs/transport-fallback.md).
+**Self-healing.** A watchdog watches the tunnel snapshots and restarts anything
+that has stopped or stalled. Services are systemd units and survive reboots.
 
-## Self-healing
-
-BackSpeed includes a watchdog that detects stopped or stalled tunnels and performs recovery.
-
-Services are managed through systemd and survive reboots.
-
-## Automatic rollback
-
-Updates and relevant configuration changes can create restore points and roll back when the tunnel does not return successfully.
+**Automatic rollback.** Updates and configuration changes write a restore point
+first, and roll back on their own if the tunnel does not come back.
 
 ---
 
-# Diagnostics
+## Diagnostics and performance
 
-BackSpeed includes diagnostics directly in the CLI.
+* **Link Test** — latency, jitter and packet loss over the real path, plus a
+  transport recommendation.
+* **Health Check** — server, panel and tunnels, with a suggested fix for each
+  problem it finds.
+* **Tunnel Metrics** — traffic, connections, and transport-specific numbers such
+  as KCP retransmissions, loss and FEC repairs.
 
-### Link Test
-
-Measures:
-
-* latency
-* jitter
-* packet loss
-
-It also recommends a transport for the measured route.
-
-### Health Check
-
-Checks the server, panel and tunnels and provides a suggested fix when it detects a problem.
-
-### Tunnel Metrics
-
-Provides tunnel-level statistics including traffic, connections and transport-specific metrics such as KCP retransmissions, loss and FEC repairs.
-
-See:
-
-* [Health Check](docs/health-check.md)
-* [Tunnel Metrics](docs/tunnel-metrics.md)
-* [Performance presets](docs/performance-presets.md)
-* [Performance notes](docs/performance-notes.md)
+Four performance presets — **Balance**, **Turbo**, **Aggressive** and
+**Throughput** — tune the queues and transport behaviour, and the CLI includes
+kernel/network optimisation. See
+[Performance presets](docs/performance-presets.md) ·
+[Performance notes](docs/performance-notes.md) ·
+[Tunnel metrics](docs/tunnel-metrics.md) ·
+[Health check](docs/health-check.md).
 
 ---
 
-# Performance
+## Security
 
-BackSpeed provides four performance presets:
+Encrypted transports: **TCP + Stealth**, **TCP + PCK**, **UDP + KCP + FEC**,
+**UDP + QUIC**, **WSS**, **WSS Mux** and **xDi**. On plain transports the tunnel
+credential itself is not encrypted by the transport, so choose accordingly.
 
-* **Balance**
-* **Turbo**
-* **Aggressive**
-* **Throughput**
+The web panel supports password authentication, two-factor authentication,
+recovery codes, scoped API tokens and authorization records — see
+[Access control](docs/access-control.md).
 
-The first three tune the queues and transport behavior for a full IP tunnel; Throughput is intended for maximizing sustained transfer.
+Release archives are verified against the published SHA-256 checksum, and an
+archive that cannot be verified is refused rather than installed. See
+[Updates & rollback](docs/updates.md).
 
-BackSpeed also includes kernel/network optimization through the CLI.
-
-See [Performance presets](docs/performance-presets.md).
-
----
-
-# Security
-
-BackSpeed provides several security mechanisms depending on the transport and deployment mode.
-
-### Encrypted transports
-
-Encrypted tunnel options include:
-
-* TCP + Stealth
-* TCP + PCK
-* UDP + KCP + FEC
-* UDP + QUIC
-* WSS
-* WSS Mux
-* xDi
-
-On plain transports such as TCP, TCP Mux, UDP, WS and WS Mux, the tunnel credential itself is not encrypted by the transport.
-
-### Web panel security
-
-The Web Panel supports:
-
-* Password authentication
-* Two-factor authentication
-* Recovery codes
-* Scoped API tokens
-* Authorization records
-
-See [Access control](docs/access-control.md).
-
-### Verified releases
-
-Release archives are verified against the published SHA-256 checksum.
-
-An archive that cannot be verified is refused rather than installed.
-
-See [Updates & rollback](docs/updates.md).
+Backends can see the real client address through **PROXY protocol v2**, so
+per-user and per-device limits behind the tunnel keep working — see
+[Real client IP](docs/real-client-ip.md).
 
 ---
 
-# Real client IP
+## Web panel
 
-Backends normally see the connection as coming from the tunnel itself.
-
-BackSpeed can instead send the original client address using **PROXY protocol v2**.
-
-This allows applications and panels behind the tunnel to see the real client IP and keep per-user/device limits working.
-
-Supported transports and limitations are documented in:
-
-[Real client IP / PROXY protocol v2](docs/real-client-ip.md)
-
----
-
-# Web Panel
-
-BackSpeed includes a monitoring-focused web dashboard.
-
-It provides:
-
-* CPU usage
-* RAM usage
-* Disk usage
-* Traffic
-* Tunnel state
-* Real ping
-* Logs
-* Backup and Telegram settings
-* Panel security settings
-
-The panel listens on **port 7777** by default.
+A monitoring dashboard on **port 7777**:
 
 ```text
 Iran server
@@ -658,130 +350,60 @@ Iran server
     └── Web Panel :7777
 ```
 
-The panel is primarily for monitoring and management around the deployment; tunnel creation and detailed tunnel configuration remain available through the CLI.
+CPU, RAM, disk, traffic, tunnel state, real ping, logs, backup and Telegram
+settings, and the panel's own security settings. It supports HTTPS, custom
+certificates, two-factor authentication and API access control. Tunnel creation
+stays in the CLI; the panel is for watching and operating what is running.
 
-It also supports:
+See [Web Panel](docs/web-panel.md) ·
+[Screen by screen](docs/web-panel-screens.md).
 
-* HTTPS
-* Custom certificates
-* Two-factor authentication
-* Recovery codes
-* API access control
+From the panel you can also register **managed servers** over SSH and build or
+operate both ends of a tunnel without repeating the setup — see
+[Managed servers](docs/managed-servers.md).
 
-See:
-
-* [Web Panel](docs/web-panel.md)
-* [Web Panel — screen by screen](docs/web-panel-screens.md)
-
----
-
-# Managed servers
-
-The Web Panel can register remote servers as managed nodes.
-
-Once registered, BackSpeed can use the panel to build and manage both ends of a tunnel without requiring you to repeat the entire SSH setup manually.
-
-Managed servers can be:
-
-* registered
-* edited
-* tested
-* used to create tunnels
-* started
-* stopped
-* restarted
-* removed
-
-See [Managed servers](docs/managed-servers.md).
+**Telegram** can carry periodic status reports, tunnel status, resource alerts
+and recovery messages, and can relay its own connection through the tunnel when
+Telegram is not directly reachable — see [Telegram bot](docs/telegram-bot.md) ·
+[Alerts](docs/alerts.md).
 
 ---
 
-# Telegram monitoring
+## Backup and updates
 
-BackSpeed can send status and alert messages through Telegram.
+`Backup & Restore` writes a portable `.tar.gz` of tunnel configs, panel settings,
+the panel password, Telegram settings, TLS certificates and scheduled tasks. It
+restores onto another machine. See
+[Backup & Restore](docs/backup-restore.md).
 
-The built-in Telegram integration can relay its connection through a tunnel peer, allowing Telegram monitoring from environments where direct Telegram access is unavailable.
-
-It supports:
-
-* periodic status reports
-* tunnel status
-* resource alerts
-* recovery messages
-* monitoring events
-
-See:
-
-* [Telegram bot](docs/telegram-bot.md)
-* [Alerts](docs/alerts.md)
-
----
-
-# Backup & Restore
-
-BackSpeed can create a portable backup containing the important deployment state, including:
-
-* tunnel configurations
-* panel settings
-* panel password
-* Telegram settings
-* TLS certificates
-* scheduled tasks
-
-Backups are stored as `.tar.gz` archives.
-
-They can also be restored onto another machine.
-
-See [Backup & Restore](docs/backup-restore.md).
-
----
-
-# Updates
-
-BackSpeed can update itself from the GitHub release system.
-
-The update process:
-
-1. Detects the available release.
-2. Downloads the architecture-specific archive.
-3. Verifies the published SHA-256.
-4. Installs the release.
-5. Uses restore points and recovery logic if the updated tunnel does not return successfully.
-
-Updates can also use a tunnel peer when the server itself cannot reach GitHub.
-
-If neither direct access nor a tunnel path is available, BackSpeed supports offline updates.
+Updates come from the GitHub release system: detect, download the archive for
+your architecture, verify the published SHA-256, install, and roll back to the
+restore point if the tunnel does not return. When the server cannot reach GitHub
+it can update through a tunnel peer; when neither path exists, update offline.
 
 See [Updates & rollback](docs/updates.md).
 
 ---
 
-# Offline installation
+## Offline installation
 
-BackSpeed does not require the VPS itself to have GitHub access.
-
-Download the release from a machine with internet access and copy it to the server.
-
-For example:
+Download the release anywhere with internet, copy it to the server, install it
+there. Nothing is fetched from the VPS.
 
 ```bash
 scp install.sh SHA256SUMS backspeed_linux_amd64.tar.gz root@SERVER_IP:/root/
 
-ssh root@SERVER_IP \
-  "cd /root && sudo bash install.sh"
+ssh root@SERVER_IP "cd /root && sudo bash install.sh"
 ```
 
-Or install manually after verifying the checksum:
+Or by hand, after checking the checksum:
 
 ```bash
 sha256sum backspeed_linux_amd64.tar.gz
-
 tar xzf backspeed_linux_amd64.tar.gz
 
 mkdir -p /etc/backspeed /root/BackSpeed/backups
-
 install -m 0755 backspeed /usr/local/bin/backspeed
-
 echo /root/BackSpeed > /etc/backspeed/install_path
 
 sudo backspeed
@@ -791,36 +413,7 @@ See [Installation](docs/install.md).
 
 ---
 
-# Configuration & operations
-
-For operators who need more than the basic setup, BackSpeed documents its internal configuration and operational behavior separately.
-
-### CLI
-
-[CLI menu reference](docs/cli-menu.md)
-
-Complete reference for:
-
-* Setup Iran
-* Setup Kharej
-* Direct setup
-* Tunnel management
-* Built-in proxy
-* Backup & Restore
-* Web Panel
-* Optimize
-* Telegram
-* Updates
-* Fine Tune
-* File locations
-
-### Configuration
-
-[Configuration reference](docs/config-reference.md)
-
-Generated from the configuration declarations and documents every configuration key BackSpeed reads.
-
-### Server layout
+## Server layout
 
 ```text
 /root/BackSpeed
@@ -833,194 +426,69 @@ See [Server layout](docs/server-layout.md).
 
 ---
 
-# Documentation
+## Documentation
 
-BackSpeed intentionally separates **setup tutorials** from **technical reference**.
+Setup is in `tutorial/`, reference is in `docs/`.
 
-## Tutorials
-
-The `tutorial/` directory explains how to actually build a tunnel, step by step, following the CLI wizard.
-
-### Start here
+### Tutorials
 
 * [Before you start](tutorial/before-you-start.md)
-
-### Reverse transports
-
-* [TCP](tutorial/tcp.md)
-* [TCP Mux](tutorial/tcp-mux.md)
-* [TCP + Stealth](tutorial/tcp-stealth.md)
-* [TCP + PCK](tutorial/tcp-pck.md)
-* [UDP](tutorial/udp.md)
-* [UDP + KCP + FEC](tutorial/udp-kcp-fec.md)
-* [UDP + QUIC](tutorial/udp-quic.md)
-* [WS / WS Mux](tutorial/websocket.md)
-* [WSS / WSS Mux](tutorial/websocket-tls.md)
+* [TCP](tutorial/tcp.md) · [TCP Mux](tutorial/tcp-mux.md) ·
+  [TCP + Stealth](tutorial/tcp-stealth.md) · [TCP + PCK](tutorial/tcp-pck.md)
+* [UDP](tutorial/udp.md) · [UDP + KCP + FEC](tutorial/udp-kcp-fec.md) ·
+  [UDP + QUIC](tutorial/udp-quic.md)
+* [WS / WS Mux](tutorial/websocket.md) · [WSS / WSS Mux](tutorial/websocket-tls.md)
 * [xDi / ICMP](tutorial/xdi-icmp.md)
+* [Forwarded UDP](tutorial/udp-forwarding.md) ·
+  [Behind X-UI / 3x-ui / Marzban](tutorial/behind-a-panel.md) ·
+  [Direct tunnel](tutorial/direct-tunnel.md) ·
+  [IP Spoofing](tutorial/ip-spoofing.md)
 
-### Special deployments
+### Reference
 
-* [Forwarded UDP](tutorial/udp-forwarding.md)
-* [Behind X-UI / 3x-ui / Marzban](tutorial/behind-a-panel.md)
-* [Direct tunnel](tutorial/direct-tunnel.md)
-* [IP Spoofing](tutorial/ip-spoofing.md)
+* **Architecture** — [Architecture](docs/architecture.md) ·
+  [Design decisions](docs/design-decisions.md) ·
+  [Configuration reference](docs/config-reference.md)
+* **Transports & networking** — [Transports](docs/transports.md) ·
+  [Choosing a transport](docs/choosing-a-transport.md) ·
+  [Transport fallback](docs/transport-fallback.md) ·
+  [Direct layer-3 tunnel](docs/l3-direct-tunnel.md) ·
+  [Port mappings](docs/port-mappings.md) · [Forwarded UDP](docs/forwarded-udp.md) ·
+  [TCP MSS clamp](docs/mss-clamp.md) · [Filtered / dirty IP](docs/filtered-or-dirty-ip.md) ·
+  [WSS camouflage](docs/camouflage.md) · [IP Spoofing](docs/ip-spoofing.md)
+* **Operations** — [Installation](docs/install.md) ·
+  [CLI menu](docs/cli-menu.md) · [Web Panel](docs/web-panel.md) ·
+  [Managed servers](docs/managed-servers.md) · [Monitor service](docs/monitor-service.md) ·
+  [Troubleshooting](docs/troubleshooting.md)
+* **Reliability & maintenance** — [Backup & Restore](docs/backup-restore.md) ·
+  [Updates & rollback](docs/updates.md) · [Limits](docs/limits.md) ·
+  [Log schema](docs/log-schema.md)
+* **Development** — [Contributing](CONTRIBUTING.md) ·
+  [Releasing](docs/releasing.md)
 
----
-
-## Documentation reference
-
-### Architecture & internals
-
-* [Architecture](docs/architecture.md)
-* [Design decisions](docs/design-decisions.md)
-* [Performance notes](docs/performance-notes.md)
-* [Configuration reference](docs/config-reference.md)
-
-### Transports & networking
-
-* [Transports](docs/transports.md)
-* [Choosing a transport](docs/choosing-a-transport.md)
-* [Transport fallback](docs/transport-fallback.md)
-* [Direct layer-3 tunnel](docs/l3-direct-tunnel.md)
-* [Direct stream tunnel](docs/direct-tunnel.md)
-* [TCP + PCK](docs/tcp-pck.md)
-* [IP Spoofing](docs/ip-spoofing.md)
-* [Port mappings](docs/port-mappings.md)
-* [Forwarded UDP](docs/forwarded-udp.md)
-* [TCP MSS clamp](docs/mss-clamp.md)
-* [Filtered / dirty IP](docs/filtered-or-dirty-ip.md)
-* [WSS camouflage](docs/camouflage.md)
-
-### Operations
-
-* [Installation](docs/install.md)
-* [CLI menu](docs/cli-menu.md)
-* [Server layout](docs/server-layout.md)
-* [Web Panel](docs/web-panel.md)
-* [Web Panel screens](docs/web-panel-screens.md)
-* [Managed servers](docs/managed-servers.md)
-* [Health Check](docs/health-check.md)
-* [Tunnel Metrics](docs/tunnel-metrics.md)
-* [Monitor service](docs/monitor-service.md)
-* [Troubleshooting](docs/troubleshooting.md)
-
-### Reliability & maintenance
-
-* [Failover & load balancing](docs/failover-load-balancing.md)
-* [Transport fallback](docs/transport-fallback.md)
-* [Backup & Restore](docs/backup-restore.md)
-* [Updates & rollback](docs/updates.md)
-* [Performance presets](docs/performance-presets.md)
-* [Per-tunnel limits](docs/limits.md)
-* [Real client IP](docs/real-client-ip.md)
-
-### Management & security
-
-* [Access control](docs/access-control.md)
-* [Telegram bot](docs/telegram-bot.md)
-* [Alerts](docs/alerts.md)
-* [Log schema](docs/log-schema.md)
-
-### Development
-
-* [Contributing](CONTRIBUTING.md)
-* [Releasing](docs/releasing.md)
-
-> Every documentation page includes a Persian summary where applicable.
+> Every documentation page carries a Persian summary where applicable.
 
 ---
 
-# Screenshots
+## Support and community
 
-### CLI
+* Star the repository if it is useful to you.
+* Report bugs through [GitHub Issues](https://github.com/SpeedwiT/BackSpeed/issues).
+* Pull requests are welcome — read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
-<p align="center">
-  <img src="img/cli-Screenshot.png" alt="BackSpeed CLI">
-</p>
-
-### Web Panel
-
-<p align="center">
-  <img src="img/web-panel-Screenshot.png" alt="BackSpeed Web Panel">
-</p>
-
-### Tunnel Management
-
-<p align="center">
-  <img src="img/cli-manage-Screenshot.png" alt="BackSpeed tunnel management">
-</p>
-
-### Telegram Bot
-
-<p align="center">
-  <img src="img/tg-bot-Screenshot.png" alt="BackSpeed Telegram bot">
-</p>
+**Telegram** · Channel [@Speedw_IT](https://t.me/Speedw_IT) ·
+Community [@SpeedwIT](https://t.me/SpeedwIT)
 
 ---
 
-# Support & Community
+## License
 
-If BackSpeed is useful to you:
+BackSpeed is free software, released under the
+**GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
-* Star the repository
-* Report bugs through GitHub Issues
-* Contribute improvements
-* Join the Telegram community
+* [LICENSE](LICENSE) — the full licence text
+* [NOTICE](NOTICE) — additional terms and required notices
+* [TRADEMARK.md](TRADEMARK.md) — naming and branding terms
 
-### Telegram
-
-* Channel: [@Speedw_IT](https://t.me/Speedw_IT)
-* Community: [@SpeedwIT](https://t.me/SpeedwIT)
-
----
-
-# Contributing
-
-Pull requests, bug reports and technical improvements are welcome.
-
-Before contributing:
-
-1. Read [CONTRIBUTING.md](CONTRIBUTING.md).
-2. Check the relevant documentation.
-3. Keep changes focused.
-4. Add or update tests where appropriate.
-5. Update documentation when behavior or configuration changes.
-
-For the release process, see [Releasing](docs/releasing.md).
-
----
-
-# License
-
-Copyright © 2026 Amin Mohammadi (AminMGMT).
-
-BackSpeed is released under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
-
-See:
-
-* [LICENSE](LICENSE)
-* [NOTICE](NOTICE)
-* [TRADEMARK.md](TRADEMARK.md)
-
-You may use, study, modify, redistribute and build a business on BackSpeed under the terms of the license.
-
-Additional attribution and trademark conditions apply.
-
-### Attribution
-
-Modified versions must keep this line, unaltered, in their README (and in NOTICE):
-
-```text
-Based on BackPack by Amin Mohammadi (AminMGMT)
-https://github.com/AminMGMT/BackPack
-```
-
-### Name & logo
-
-**BackPack**, its name and logo are not licensed as part of the source code.
-
-Forks should use their own name and branding.
-
-It is permitted to truthfully state that a project is based on or compatible with BackPack.
-
-See [TRADEMARK.md](TRADEMARK.md) for the complete terms.
+You may use, study, modify, redistribute and build a business on it under those
+terms.

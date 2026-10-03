@@ -413,4 +413,4 @@ See `internal/tunnel/l3/bench_gate_test.go`.
 
 ---
 
-*Last verified against BackSpeed v1.8.5.*
+*Last verified against BackSpeed v1.0.0.*
